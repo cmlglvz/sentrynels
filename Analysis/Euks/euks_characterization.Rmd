@@ -8,6 +8,7 @@ output: html_document
 
 ```{r}
 library(tidyverse)
+library(vegan)
 ```
 
 ## Data import
@@ -50,7 +51,50 @@ print(all(colnames(asv_table)%in%rownames(taxa)))
 ## NA filtering: first two levels ('Kingdom' and 'Supergroup')
 
 ```{r}
+unassigned <- taxa[rowSums(is.na(taxa[,c(3,4)]))>0,] # 244 were not assigned at Kingdom and Supergroup levels
+unknown <- taxa[rowSums(is.na(taxa[3]))>0,] # 29 of 244 were completely unclassified
+euks <- taxa[!row.names(taxa)%in%unassigned[,1],]
+write.csv2(euks, "C:/Users/Administrador/Desktop/Camilo/sentrynels/Data/Characterization/Eukaryotes_taxa.csv")
+euks_asv <- dplyr::select(asv_table, -all_of(unassigned[,1]))
+write.csv2(euks_asv, "C:/Users/Administrador/Desktop/Camilo/sentrynels/Data/Characterization/Eukaryotes_asv_tabla.csv")
 
+print(all(colnames(euks_asv)%in%rownames(euks))) #If TRUE you can continue
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Rarefaction analysis
+
+```{r}
+sort_obs <- sort(rowSums(euks_asv))
+
+png("/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/Euks/Fig_1_Sequencing_saturation_eukaryotes_ASV.png")
+par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(0, 0, 0, 0))
+vegan::rarecurve(x = euks_asv, col = "orange", lwd = 2, las = 1, label = TRUE, step = 10, cex = 0.5)
+dev.off()
+
+rare_euks_asv <- vegan::rrarefy(euks_asv, sort_obs[1]) %>% as.data.frame()
+png("/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/Euks/Fig_2_Rarefacted_sequencing_saturation_eukaryotes_ASV.png")
+par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(0, 0, 0, 0))
+vegan::rarecurve(x = rare_euks_asv, col = "slateblue", lwd = 2, las = 1, label = TRUE, step = 10, cex = 0.5)
+dev.off()
+write.csv2(rare_euks_asv, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Characterization/Rarefacted_eukaryotes_asv_table.csv")
+```
+
+## Data management
+
+```{r}
+euks_complete <- as.data.frame(t(euks_asv))
+euks_complete <- dplyr::mutate(euks_complete, Sequences = rownames(euks_complete), .before = "C1A17")
+euks_complete <- dplyr::mutate(euks_complete, 
+                               Chanaral = rowSums(euks_complete[2:13]), 
+                               Flamenco = rowSums(euks_complete[14:25]), 
+                               Huasco = rowSums(euks_complete[26:37]), 
+                               Pta_Choros = rowSums(euks_complete[38:42]), 
+                               Quintero = rowSums(euks_complete[43:52]), 
+                               Las_Cruces = rowSums(euks_complete[53:64]), 
+                               Total = rowSums(euks_complete[2:64])
+                               )
+euks_complete <- dplyr::inner_join(euks_complete, euks, by = "Sequences") %>% dplyr::relocate(ASV, .after = Sequences)
+rownames(euks_complete) <- euks_complete[,2]
+write.csv2(euks_complete, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Characterization/Eukaryotes_characterization.csv")
+```
+
