@@ -1,0 +1,20 @@
+---
+title: "Core"
+author: "CGA"
+output: html_document
+---
+
+## Libraries
+
+```{r}
+library(tidyverse)
+library(vegan)
+library(UpSetR)
+```
+
+## Data import
+
+```{r data}
+
+```
+
