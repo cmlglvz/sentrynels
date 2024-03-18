@@ -10,6 +10,7 @@ output: html_document
 library(tidyverse)
 library(vegan)
 library(UpSetR)
+library(hrbrthemes)
 ```
 
 ## Data import
@@ -34,6 +35,7 @@ write.csv2(euks_upset, "/Documents/Proyectos_R/sentrynels/Data/Core/Upset_format
 ```
 
 ## UpSet visualization
+
 ### Complete
 
 ```{r}
@@ -53,6 +55,7 @@ dev.off()
 ```
 
 ### Selected
+
 ```{r}
 png("/Documents/Proyectos_R/sentrynels/Analysis/Core/Fig_4_selected_upset_intersections_eukaryotes.png", width = 40, height = 17, units = "in", res = 300)
 UpSetR::upset(euks_upset, 
@@ -99,5 +102,97 @@ UpSetR::upset(euks_upset,
               mainbar.y.label = "Sites Intersections", 
               sets.x.label = "ASVs per sampling site")
 dev.off()
+```
+
+## ASV identification
+
+### Core (Shared)
+
+```{r}
+core <- euks_upset %>% 
+  dplyr::filter(Chanaral == 1 & Flamenco == 1 & Huasco == 1 & Pta_Choros == 1 & Quintero == 1 & Las_Cruces == 1)
+core_abundance <- euks_complete[row.names(euks_complete)%in%row.names(core),]
+write.csv2(core_abundance, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Core/Eukaryotes_core_asv_abundance.csv")
+sum(core_abundance[,72])
+```
+
+### Uniques per site
+
+```{r}
+chanaral <- euks_upset %>% 
+  dplyr::filter(Chanaral == 1 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 0)
+chanaral_abundance <- euks_complete[row.names(euks_complete)%in%row.names(chanaral),]
+
+flamenco <- euks_upset %>% 
+  dplyr::filter(Chanaral == 0 & Flamenco == 1 & Huasco == 0 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 0)
+flamenco_abundance <- euks_complete[row.names(euks_complete)%in%row.names(flamenco),]
+
+huasco <- euks_upset %>% 
+  dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 1 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 0)
+huasco_abundance <- euks_complete[row.names(euks_complete)%in%row.names(huasco),]
+
+pta_choros <- euks_upset %>% 
+  dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 1 & Quintero == 0 & Las_Cruces == 0)
+ptachoros_abundance <- euks_complete[row.names(euks_complete)%in%row.names(pta_choros),]
+
+quintero <- euks_upset %>% 
+  dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 0 & Quintero == 1 & Las_Cruces == 0)
+quintero_abundance <- euks_complete[row.names(euks_complete)%in%row.names(quintero),]
+
+las_cruces <- euks_upset %>% 
+  dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 1)
+lascruces_abundance <- euks_complete[row.names(euks_complete)%in%row.names(las_cruces),]
+```
+
+### Others (The rest of ASV that are not considered shared or unique)
+
+```{r}
+#NOTE: in this point we are subsetting the information directly from abundance table
+others <- euks_complete[!row.names(euks_complete)%in%row.names(core),]
+others <- others[!row.names(others)%in%row.names(chanaral),]
+others <- others[!row.names(others)%in%row.names(flamenco),]
+others <- others[!row.names(others)%in%row.names(huasco),]
+others <- others[!row.names(others)%in%row.names(pta_choros),]
+others <- others[!row.names(others)%in%row.names(quintero),]
+others <- others[!row.names(others)%in%row.names(las_cruces),]
+```
+
+## Groups abundances
+
+```{r}
+asv_types <- read.csv("/Users/Administrador/Desktop/Camilo/sentrynels/Data/Core/Eukaryotes_ASV_type_abundance.csv", 
+                      header = TRUE, 
+                      sep = ";", 
+                      skip = 0) %>% 
+  dplyr::rename(Site = X)
+asv_types$Site <- factor(asv_types$Site, levels = c("Chanaral", "Flamenco", "Huasco", "Pta_Choros", "Quintero", "Las_Cruces"))
+# Transform into long dataframe for ploting
+long_types <- reshape2::melt(asv_types[,-5], id.vars = "Site", variable.name = "Type") %>% dplyr::rename(Abundance = value) # you can use pivot_longer() instead
+long_types$Type <- factor(long_types$Type, levels = c("Unique", "Other", "Shared"))
+```
+
+## Abundances plot
+
+```{r}
+aplot <- ggplot(long_types, 
+                aes(x = Site, 
+                    y = Abundance, 
+                    fill = Type)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "Sites", 
+       y = "Relative Abundance", 
+       title = "Relative contribution of eukaryotes ASV grouped by presence at sites") + 
+  scale_fill_manual(values = c("#9CAFB7", "#2B2D42", "#EF233C")) + 
+  theme_ipsum(base_size = 22, 
+              axis_title_size = 25, 
+              plot_title_size = 25) + 
+  theme(legend.position = "bottom", 
+        legend.direction = "horizontal")
+ggsave(plot = aplot, 
+       filename = "Fig_5_relative_contribution_ASV_eukaryotes_by_type.png", 
+       path = "/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/Core/", 
+       width = 23, 
+       height = 15, 
+       dpi = 600)
 ```
 
