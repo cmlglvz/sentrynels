@@ -1,0 +1,26 @@
+---
+title: "PPE"
+author: "CGA"
+output: html_document
+---
+
+## Libraries
+
+```{r}
+library(tidyverse)
+library(vegan)
+library(UpSetR)
+library(hrbrthemes)
+```
+
+## Data import
+
+```{r data}
+euks_complete <- read.csv("/Documents/Proyectos_R/sentrynels/Data/Characterization/Eukaryotes_characterization.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0, 
+                          row.names = 1)
+```
+
