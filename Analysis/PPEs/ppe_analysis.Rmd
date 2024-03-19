@@ -16,11 +16,28 @@ library(hrbrthemes)
 ## Data import
 
 ```{r data}
-euks_complete <- read.csv("/Documents/Proyectos_R/sentrynels/Data/Characterization/Eukaryotes_characterization.csv", 
+euks_complete <- read.csv("https://raw.githubusercontent.com/cmlglvz/sentrynels/main/Data/Characterization/Eukaryotes_characterization.csv", 
                           header = TRUE, 
                           sep = ";", 
                           dec = ".", 
                           skip = 0, 
                           row.names = 1)
+```
+
+## Eukaryotes subsetting
+
+```{r}
+unique(euks_complete$Division) # At least 21 known phyla of eukaryotes in the dataset
+autotrophic <- euks_complete %>% 
+  dplyr::filter(Division == "Chlorophyta" | Division == "Stramenopiles" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Kathablepharidacea" | Division == "Rhodophyta") %>% dplyr::filter(Subdivision != "Bigyra")
+write.csv2(autotrophic, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/PPE/Autotrophic_eukaryotes_ASV.csv")
+```
+
+## PPE Selection
+
+```{r}
+oldie <- read.csv("/Users/Administrador/Desktop/Camilo/sentrynels/Data/PPE/HCS_PPE_edited_taxonomic_and_abundance.csv", 
+                  header = TRUE, sep = ";", dec = ".", skip = 0)
+ppes <- autotrophic[autotrophic$Sequences %in% oldie$Seq,]
 ```
 
