@@ -8,6 +8,7 @@ output: html_document
 
 ```{r}
 library(tidyverse)
+library(viridis)
 library(treemap)
 library(vegan)
 library(UpSetR)
@@ -127,29 +128,86 @@ treemap(as_tibble(ppe_phylum, rownames = "Phylum", .name_repair = "minimal"),
 dev.off()
 ```
 
+## Relative abundance
 
-## Abundance plot
+### Phylum - Autotrophs
 
 ```{r}
-aplot <- ggplot(long_types, 
-                aes(x = Site, 
-                    y = Abundance, 
-                    fill = Type)) + 
+rel_abund_auto <- auto_phylum[,-c(64:71)] %>% 
+  t() %>% 
+  as.data.frame() %>% 
+  add_column(Site = c(rep("Chanaral",12), 
+                      rep("Flamenco",12), 
+                      rep("Huasco",12),
+                      rep("Pta_Choros",5),
+                      rep("Quintero",10),
+                      rep("Las_Cruces",12)), 
+             .before = "Chlorophyta", 
+             .name_repair = "minimal")
+rel_abund_auto$Site <- factor(rel_abund_auto$Site, levels = unique(rel_abund_auto$Site))
+long_raa <- reshape2::melt(rel_abund_auto, id.vars = "Site", variable.name = "Phylum") %>% dplyr::rename(Abundance = value)
+inverted <- factor(long_raa$Phylum, levels = rev(as.character(unique(long_raa$Phylum))))
+```
+
+### Plot
+
+```{r}
+raaplot <- ggplot(long_raa,
+                  aes(x = Site,
+                      y = Abundance,
+                      fill = inverted)) + 
   geom_bar(position = "fill", stat = "identity") + 
   labs(x = "Sites", 
-       y = "Relative Abundance", 
-       title = "Relative contribution of PPE ASV grouped by presence at sites") + 
-  scale_fill_manual(values = c("#9CAFB7", "#2B2D42", "#EF233C")) + 
+       y = "Relative abundance", 
+       title = "Relative abundance of autotrophic reads per site") + 
+  scale_fill_manual(values = rev(as.character(auto_phylum$Color))) + 
   theme_ipsum(base_size = 22, 
               axis_title_size = 25, 
               plot_title_size = 25) + 
   theme(legend.position = "bottom", 
         legend.direction = "horizontal")
-ggsave(plot = aplot, 
-       filename = "Fig_7_relative_contribution_ASV_eukaryotes_by_type.png", 
+ggsave(plot = raaplot, 
+       filename = "Fig_10_relative_reads_abundance_autotrophs_per_site.png", 
        path = "/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/PPEs/", 
        width = 23, 
        height = 15, 
+       dpi = 600)
+```
+
+### Class - PPEs
+
+```{r}
+ppe_class <- Tax.sum(ppe_abundance, ppe_taxa, 7) %>% as_tibble(rownames = "Samples", .name_repair = "minimal")
+ppe_class$Samples <- factor(ppe_class$Samples, levels = unique(ppe_class$Samples))
+long_ppeclass <- reshape2::melt(ppe_class[,-25], id.vars =  "Samples", variable.name = "Class") %>% rename(Abundance = value)
+reversed <- rev(as.character(c("Mamiellophyceae", "Trebouxiophyceae", "Chlorodendrophyceae", "Chloropicophyceae", "Pyramimonadophyceae", "Prasino-Clade-9", "Chlorophyceae", "Nephroselmidophyceae", "Prasino-Clade-VIII", "Coscinodiscophyceae", "Pelagophyceae", "Mediophyceae", "Chrysophyceae", "Bolidophyceae", "Bacillariophyceae", "Dictyochophyceae", "MOCH-3", "MOCH-5", "MOCH-2", "MOCH-1", "Xanthophyceae", "MOCH-4", "Prymnesiophyceae", "Haptophyta_Clade_HAP3", "Haptophyta_Clade_HAP5", "Haptophyta_Clade_HAP4", "Cryptophyceae", "Cryptophyceae:nucl", "Kathablepharidea")))
+long_ppeclass$Class <- factor(long_ppeclass$Class, levels = unique(reversed))
+```
+
+### Plot
+
+```{r}
+claplot <- ggplot(long_ppeclass,
+                  aes(x = Samples,
+                      y = Abundance,
+                      fill = Class)) + 
+  geom_bar(position = "fill", stat = "identity", width = 1, color = "darkgrey") + 
+  labs(x = "Samples", 
+       y = "Relative abundance", 
+       title = "Relative abundance of PPE reads grouped by class at each sample") + 
+  # scale_fill_viridis(discrete = TRUE, begin = 0.05, end = 0.95, direction = -1, option = "turbo", alpha = 0.7) + 
+  scale_fill_manual(values = c("#C577F9", "#5888A8", "#6CA6CD", "#570D16", "#6D101B", "#981626", "#C41D31", "#4E433A", "#564A40", "#5F5146", "#69594D", "#736255", "#8C7766", "#9A8370", "#A9907B", "#BA9E87", "#CDAE94", "#D2B59E", "#D6BDA7", "#DBC4B1", "#274127", "#345634", "#416C41", "#4F814F", "#5C975C", "#69AC69", "#76C276", "#83D783", "#90ED90")) + 
+  #scale_fill_manual(values = c("#C577F9", "#5888A8", "#6CA6CD", "#570D16", "#6D101B", "#981626", "#C41D31", "#4E433A", "#564A40", "#5F5146", "#69594D", "#736255", "#8C7766", "#9A8370", "#A9907B", "#BA9E87", "#CDAE94", "#D2B59E", "#D6BDA7", "#DBC4B1", "#DFCBBB", "#E4D3C5", "#E8DACE", "#EDE2D8", "#F1E9E2", "#F6F1ED", "#FBF9F7", "#274127", "#345634", "#416C41", "#4F814F", "#5C975C", "#69AC69", "#76C276", "#83D783", "#90ED90", "#A3F0A3", "#BFF5BF")) + 
+  theme_ipsum(base_size = 22, 
+              axis_title_size = 25, 
+              plot_title_size = 25) + 
+  theme(legend.position = "bottom", 
+        legend.direction = "horizontal")
+ggsave(plot = claplot, 
+       filename = "Fig_11_ver_2_relative_reads_abundance_ppes_by_class.png", 
+       path = "/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/PPEs/", 
+       width = 35, 
+       height = 20, 
        dpi = 600)
 ```
 
