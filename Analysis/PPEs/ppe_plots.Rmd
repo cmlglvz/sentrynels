@@ -1,0 +1,47 @@
+---
+title: "Plots"
+author: "CGA"
+output: html_document
+---
+
+## Libraries
+
+```{r}
+library(tidyverse)
+library(vegan)
+library(UpSetR)
+library(hrbrthemes)
+```
+
+## Data import
+
+```{r data}
+
+```
+
+
+## Abundance plot
+
+```{r}
+aplot <- ggplot(long_types, 
+                aes(x = Site, 
+                    y = Abundance, 
+                    fill = Type)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "Sites", 
+       y = "Relative Abundance", 
+       title = "Relative contribution of PPE ASV grouped by presence at sites") + 
+  scale_fill_manual(values = c("#9CAFB7", "#2B2D42", "#EF233C")) + 
+  theme_ipsum(base_size = 22, 
+              axis_title_size = 25, 
+              plot_title_size = 25) + 
+  theme(legend.position = "bottom", 
+        legend.direction = "horizontal")
+ggsave(plot = aplot, 
+       filename = "Fig_7_relative_contribution_ASV_eukaryotes_by_type.png", 
+       path = "/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/PPEs/", 
+       width = 23, 
+       height = 15, 
+       dpi = 600)
+```
+
