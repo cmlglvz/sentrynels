@@ -8,15 +8,123 @@ output: html_document
 
 ```{r}
 library(tidyverse)
+library(treemap)
 library(vegan)
 library(UpSetR)
 library(hrbrthemes)
 ```
 
+## Functions
+
+### Taxonomy function (by Dr. Glasner)
+
+Using this may result a bit hectic, but it will help you to understand how to navigate your data instead when others tools are too restrictive
+
+```{r}
+Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
+  z <- NULL
+  y <- NULL
+  for (i in 1:length(unique(Tax.Table[colnames(OTU.Table),Tax.lvl]))) {
+    if (length(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])!=length(rownames(OTU.Table))) {
+      z <- which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])
+      y <- cbind(y, apply(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])], 1, function(x) sum(x)))
+    } else {
+      y <- cbind(y, OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])
+    }
+  }
+  colnames(y) <- unique(Tax.Table[colnames(OTU.Table),Tax.lvl])
+  invisible((y))
+}
+```
+
 ## Data import
 
 ```{r data}
+autotrophics <- read.csv("https://raw.githubusercontent.com/cmlglvz/sentrynels/main/Data/PPE/Autotrophic_eukaryotes_ASV.csv", 
+                         header = TRUE, 
+                         sep = ";", 
+                         skip = 0, 
+                         row.names = 1)
 
+ppes <- read.csv2("https://raw.githubusercontent.com/cmlglvz/sentrynels/main/Data/PPE/PPEs_ASV_table.csv", 
+                  header = TRUE, 
+                  sep = ";", 
+                  skip = 0,
+                  row.names = 1)
+```
+
+## Taxa level abundance
+
+### Data preparation
+
+Colors are based on Tragin & Vaulot (2018) publication. It will more relevant later (trust me)
+
+```{r}
+auto_taxa <- autotrophics[,-c(3:72)]
+auto_abundance <- as.data.frame(t(autotrophics[,-c(1,2,66:81)]))
+auto_phylum <- Tax.sum(auto_abundance, auto_taxa, 5) %>% 
+  t() %>% 
+  as.data.frame() %>% 
+  tibble::add_column(Color = c("#90ED90", "#CDAE94", "#6CA6CD", "#7EFFD3", "#C577F9", "#F9A555", "#2E4756"))
+auto_phylum <- auto_phylum %>%
+  dplyr::mutate(Chanaral = rowSums(auto_phylum[c(1:12)]),
+                Flamenco = rowSums(auto_phylum[c(13:24)]), 
+                Huasco = rowSums(auto_phylum[c(25:36)]), 
+                Pta_Choros = rowSums(auto_phylum[c(37:41)]),
+                Quintero = rowSums(auto_phylum[c(42:51)]),
+                Las_Cruces = rowSums(auto_phylum[c(52:63)]),
+                Total = rowSums(auto_phylum[c(1:63)]), 
+                .after = "L4A18")
+
+ppe_taxa <- ppes[,-c(3:72)]
+ppe_abundance <- as.data.frame(t(ppes[,-c(1,2,66:81)]))
+ppe_phylum <- Tax.sum(ppe_abundance, ppe_taxa, 5) %>% 
+  t() %>% 
+  as.data.frame() %>% 
+  tibble::add_column(Color = c("#90ED90", "#CDAE94", "#6CA6CD", "#7EFFD3", "#C577F9", "#2E4756"))
+ppe_phylum <- ppe_phylum %>%
+  dplyr::mutate(Chanaral = rowSums(ppe_phylum[c(1:12)]),
+                Flamenco = rowSums(ppe_phylum[c(13:24)]), 
+                Huasco = rowSums(ppe_phylum[c(25:36)]), 
+                Pta_Choros = rowSums(ppe_phylum[c(37:41)]),
+                Quintero = rowSums(ppe_phylum[c(42:51)]),
+                Las_Cruces = rowSums(ppe_phylum[c(52:63)]),
+                Total = rowSums(ppe_phylum[c(1:63)]), 
+                .after = "L4A18")
+```
+
+### Treemap plots
+
+```{r autotrophs}
+png("/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/PPEs/Fig_8_treemap_autotrophic_ASV_all_sites.png", width = 23, height = 18, units = "in", res = 600)
+treemap(as_tibble(auto_phylum, rownames = "Phylum", .name_repair = "minimal"), # by doing this we avoid problems related to using row names as "Index"
+        index = "Phylum", 
+        vSize = "Total", # We can change this to get the distribution at each site
+        type = "color", # Here we indicate how are we "painting" each section
+        vColor = "Color", # And here we point at the colors we want. In this case we tell the function to look at the column we previously added with the colors  from the article
+        position.legend = "none", 
+        fontsize.labels = 55, 
+        title = "Autotrophic eukaryotes ASV distribution (counts) for complete dataset", 
+        fontsize.title = 42, 
+        title.legend = NA, 
+        border.col = NA)
+dev.off()
+```
+
+```{r ppes}
+png("/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/PPEs/Fig_9_treemap_PPE_ASV_all_sites.png", width = 23, height = 18, units = "in", res = 600)
+treemap(as_tibble(ppe_phylum, rownames = "Phylum", .name_repair = "minimal"), 
+        index = "Phylum", 
+        vSize = "Total", 
+        type = "color", 
+        vColor = "Color", 
+        position.legend = "none", 
+        fontsize.labels = 55, 
+        title = "PPE ASVs distribution (counts) for complete dataset", 
+        fontsize.title = 42, 
+        title.legend = NA, 
+        border.col = NA)
+dev.off()
 ```
 
 
