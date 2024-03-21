@@ -39,6 +39,7 @@ write.csv2(autotrophic, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/PPE
 oldie <- read.csv("/Users/Administrador/Desktop/Camilo/sentrynels/Data/PPE/HCS_PPE_edited_taxonomic_and_abundance.csv", 
                   header = TRUE, sep = ";", dec = ".", skip = 0)
 ppes <- autotrophic[autotrophic$Sequences %in% oldie$Seq,]
+write.csv2(ppes, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/PPE/PPEs_ASV_table.csv")
 ```
 
 ## UpSet
