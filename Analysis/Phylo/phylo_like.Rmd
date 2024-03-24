@@ -1,0 +1,26 @@
+---
+title: "Phylo-like analysis"
+author: "CGA"
+output: html_document
+---
+
+## Libraries
+
+```{r, echo=FALSE,message=FALSE}
+library(tidyverse)
+library(viridis)
+library(vegan)
+library(UpSetR)
+library(hrbrthemes)
+```
+
+## Data import
+
+```{r data}
+ppes <- read.csv2("https://raw.githubusercontent.com/cmlglvz/sentrynels/main/Data/PPE/PPEs_ASV_table.csv", 
+                  header = TRUE, 
+                  sep = ";", 
+                  skip = 0,
+                  row.names = 1)
+```
+
