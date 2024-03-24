@@ -6,7 +6,7 @@ output: html_document
 
 ## Libraries
 
-```{r}
+```{r, echo=FALSE,message=FALSE}
 library(tidyverse)
 library(viridis)
 library(vegan)
@@ -38,6 +38,141 @@ write.csv2(ppe_upset, "/Documents/Proyectos_R/sentrynels/Data/PPE/Upset_formated
 ### Plot
 
 ```{r}
+png("/Documents/Proyectos_R/sentrynels/Analysis/PPEs/Fig_12_selected_upset_intersections_ppes.png", width = 40, height = 17, units = "in", res = 600)
+UpSetR::upset(ppe_upset, 
+              nsets = 6, 
+              nintersects = NA, 
+              sets = c("Las_Cruces", "Quintero", "Pta_Choros", "Huasco", "Flamenco", "Chanaral"), 
+              intersections = list("Las_Cruces", 
+                                   "Quintero", 
+                                   "Pta_Choros", 
+                                   "Huasco", 
+                                   "Flamenco", 
+                                   "Chanaral", 
+                                   list("Chanaral", "Flamenco"), 
+                                   list("Huasco", "Pta_Choros"), 
+                                   list("Quintero", "Las_Cruces"),
+                                   list("Chanaral", "Huasco"), 
+                                   list("Chanaral", "Quintero"), 
+                                   list("Huasco", "Quintero"), 
+                                   list("Flamenco", "Pta_Choros"),
+                                   list("Flamenco", "Las_Cruces"), 
+                                   list("Pta_Choros", "Las_Cruces"), 
+                                   list("Quintero", "Las_Cruces"), 
+                                   list("Chanaral", "Huasco", "Quintero"), 
+                                   list("Flamenco", "Pta_Choros", "Las_Cruces"), 
+                                   list("Chanaral", "Flamenco", "Huasco", "Pta_Choros"), 
+                                   list("Chanaral", "Flamenco", "Huasco", "Pta_Choros", "Quintero"), 
+                                   list("Chanaral", "Flamenco", "Huasco", "Pta_Choros", "Las_Cruces"), 
+                                   list("Chanaral", "Flamenco", "Huasco", "Pta_Choros", "Quintero", "Las_Cruces")
+                                   ), 
+              empty.intersections = "on", 
+              keep.order = TRUE, 
+              query.legend = "top", 
+              queries = list(list(query = intersects, params = "Chanaral", color = "#FF8811", active = TRUE, query.name = "Unique Chañaral PPE ASVs"), 
+                             list(query = intersects, params = "Flamenco", color = "#F4D06F", active = TRUE, query.name = "Unique Flamenco PPE ASVs"), 
+                             list(query = intersects, params = "Huasco", color = "#392F5A", active = TRUE, query.name = "Unique Huasco PPE ASVs"), 
+                             list(query = intersects, params = "Pta_Choros", color = "#403286", active = TRUE, query.name = "Unique Punta Choros PPE ASVs"), 
+                             list(query = intersects, params = "Quintero", color = "#18E0BD", active = TRUE, query.name = "Unique Quintero PPE ASVs"), 
+                             list(query = intersects, params = "Las_Cruces", color = "#80EB9F", active = TRUE, query.name = "Unique Las Cruces PPE ASVs"), 
+                             list(query = intersects, params = list("Chanaral", "Flamenco", "Huasco", "Pta_Choros", "Quintero", "Las_Cruces"), color = "#EF233C", active = TRUE, query.name = "Shared PPE ASVs")
+                             ), 
+              point.size = 3.5, 
+              line.size = 1.5, 
+              text.scale = 3, 
+              mainbar.y.label = "Sites Intersections", 
+              sets.x.label = "PPE ASVs per sampling site")
+dev.off()
+```
 
+## ASV identification
+
+### Core (Shared)
+
+```{r}
+core <- ppe_upset %>% 
+  dplyr::filter(Chanaral == 1 & Flamenco == 1 & Huasco == 1 & Pta_Choros == 1 & Quintero == 1 & Las_Cruces == 1)
+core_abundance <- ppes[row.names(ppes)%in%row.names(core),]
+write.csv2(core_abundance, "/Documents/Proyectos_R/sentrynels/Data/PPE/Core_ppe_asv_abundance.csv")
+sum(core_abundance[,72])
+```
+
+### Uniques/site
+
+```{r}
+chanaral <- ppe_upset %>% 
+  dplyr::filter(Chanaral == 1 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 0)
+chanaral_abundance <- ppes[row.names(ppes)%in%row.names(chanaral),]
+
+flamenco <- ppe_upset %>% 
+  dplyr::filter(Chanaral == 0 & Flamenco == 1 & Huasco == 0 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 0)
+flamenco_abundance <- ppes[row.names(ppes)%in%row.names(flamenco),]
+
+huasco <- ppe_upset %>% 
+  dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 1 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 0)
+huasco_abundance <- ppes[row.names(ppes)%in%row.names(huasco),]
+
+pta_choros <- ppe_upset %>% 
+  dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 1 & Quintero == 0 & Las_Cruces == 0)
+ptachoros_abundance <- ppes[row.names(ppes)%in%row.names(pta_choros),]
+
+quintero <- ppe_upset %>% 
+  dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 0 & Quintero == 1 & Las_Cruces == 0)
+quintero_abundance <- ppes[row.names(ppes)%in%row.names(quintero),]
+
+las_cruces <- ppe_upset %>% 
+  dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 1)
+lascruces_abundance <- ppes[row.names(ppes)%in%row.names(las_cruces),]
+```
+
+### Others (The rest of ASV that are not considered shared or unique)
+
+```{r}
+others <- ppes[!row.names(ppes)%in%row.names(core),]
+others <- others[!row.names(others)%in%row.names(chanaral),]
+others <- others[!row.names(others)%in%row.names(flamenco),]
+others <- others[!row.names(others)%in%row.names(huasco),]
+others <- others[!row.names(others)%in%row.names(pta_choros),]
+others <- others[!row.names(others)%in%row.names(quintero),]
+others <- others[!row.names(others)%in%row.names(las_cruces),]
+```
+
+## Groups abundance
+
+```{r}
+asv_types <- read.csv("/Documents/Proyectos_R/sentrynels/Data/PPE/PPEs_ASV_type_abundance.csv", 
+                      header = TRUE, 
+                      sep = ";", 
+                      skip = 0) %>% 
+  dplyr::rename(Site = X)
+asv_types$Site <- factor(asv_types$Site, levels = c("Chanaral", "Flamenco", "Huasco", "Pta_Choros", "Quintero", "Las_Cruces"))
+# Transform into long dataframe for ploting
+long_types <- reshape2::melt(asv_types[,-5], id.vars = "Site", variable.name = "Type") %>% dplyr::rename(Abundance = value) # you can use pivot_longer() instead
+long_types$Type <- factor(long_types$Type, levels = c("Unique", "Other", "Shared"))
+```
+
+### Plot
+
+```{r}
+aplot <- ggplot(long_types, 
+                aes(x = Site, 
+                    y = Abundance, 
+                    fill = Type)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "Sites", 
+       y = "Relative Abundance", 
+       title = "Relative contribution of PPE ASVs grouped by presence at sites") + 
+  scale_fill_manual(values = c("#9CAFB7", "#2B2D42", "#EF233C")) + 
+  theme_ipsum(base_size = 22, 
+              axis_title_size = 25, 
+              plot_title_size = 25) + 
+  theme(legend.position = "bottom", 
+        legend.direction = "horizontal")
+ggsave(plot = aplot, 
+       filename = "Fig_13_relative_contribution_PPE_ASV_by_type.png", 
+       path = "/Documents/Proyectos_R/sentrynels/Analysis/PPEs/", 
+       width = 23, 
+       height = 15, 
+       dpi = 600)
 ```
 
