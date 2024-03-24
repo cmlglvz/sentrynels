@@ -22,5 +22,19 @@ previous <- read.csv("/Documents/Proyectos_R/sentrynels/Data/Phylo/Previous_core
                      sep = ";", 
                      skip = 0,
                      row.names = 1)
+
+core <- read.csv("/Documents/Proyectos_R/sentrynels/Data/PPE/Core_ppe_asv_abundance.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 skip = 0, 
+                 row.names = 1)
 ```
 
+## Check data
+
+```{r}
+print(all(colnames(previous)%in%core$Sequences))
+```
+
+Como esto dio TRUE, es copiar y pegar el resto de cosas que hice para avanzar... WIIIII
+Las fuentes serán Core_Microbiota (y los respectivos markdowns) y los de Metacoder que hice para el ISME
