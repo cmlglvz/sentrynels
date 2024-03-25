@@ -28,6 +28,13 @@ core <- read.csv("/Documents/Proyectos_R/sentrynels/Data/PPE/Core_ppe_asv_abunda
                  sep = ";", 
                  skip = 0, 
                  row.names = 1)
+
+ambiente <- read.csv("~/Desktop/sentrynels/Data/Phylo/HCS_Metal_ambienteironment_NMDS.csv", 
+                     header = TRUE, 
+                     sep = ";", 
+                     dec = ".",
+                     skip = 0, 
+                     row.names = 1)
 ```
 
 ## Check data
@@ -38,3 +45,69 @@ print(all(colnames(previous)%in%core$Sequences))
 
 Como esto dio TRUE, es copiar y pegar el resto de cosas que hice para avanzar... WIIIII
 Las fuentes serán Core_Microbiota (y los respectivos markdowns) y los de Metacoder que hice para el ISME
+
+## Data format
+
+```{r}
+ambiente$Date <- factor(ambiente$Date, levels = unique(ambiente$Date))
+ambiente$Label <- factor(ambiente$Label, levels = unique(ambiente$Label))
+ambiente$Site <- factor(ambiente$Site, levels = unique(ambiente$Site))
+ambiente$Cu_Level <- factor(ambiente$Cu_Level, levels = unique(ambiente$Cu_Level))
+
+abundance <- core[,-c(1,2,66:81)] %>% t() %>% as.data.frame()
+taxa <- core[,-c(3:72)]
+write.csv2(taxa, "~/Desktop/sentrynels/Data/Phylo/Taxa_ppe_core.csv")
+# I manually checked the file to "fix" the assignation of NA
+```
+
+## FASTA file
+
+```{r, echo=FALSE,message=FALSE}
+species <- paste(taxa$ASV, taxa$Species, sep = "_")
+core_fasta <- data.frame(Names = species, Sequences = taxa$Sequences)
+seqRFLP::dataframe2fas(core_fasta, "~/Desktop/sentrynels/Data/Phylo/ppe_core.fasta")
+```
+
+Multiple alignment of sequences using the super5 algorithm in MUSCLE v5 (Edgar, year)
+
+## Dendrogram with maximum likelihood for PPE ASV core sequences
+
+```{r}
+malign <- "~/Desktop/sentrynels/Data/Phylo/core_multi_aligned.fasta"
+dbConn <-dbConnect(SQLite(), ":memory:")
+Seqs2DB(malign, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+set.seed(420) # Reproducible results
+dendro <- TreeLine(myDistMatrix = distance.matrix, 
+                   method = "ML", 
+                   showPlot = TRUE, 
+                   type = "dendrogram", 
+                   myXStringSet = consensus, 
+                   processors = NULL, 
+                   verbose = TRUE)
+dbDisconnect(dbConn)
+attributes(dendro)
+```
+
+## Extras
+
+### Extract colors from ggplot graphs
+
+```{r}
+# To simplify my life when exploring data, NOT FINISHED
+xtrct <- function(gg.plot) {
+  library(ggplot2)
+  library(stringr)
+  p <- ggplot_build(gg.plot)
+  for (i in 1:length(p$data[[1]])) {
+    v <- p$data[[1]][[1]]
+    c <- str_sub(v, start = 1, end = -3)
+    u <- unique(c)
+  } 
+  print(u)
+}
+```
+
