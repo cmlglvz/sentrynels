@@ -8,10 +8,15 @@ output: html_document
 
 ```{r, echo=FALSE,message=FALSE}
 library(tidyverse)
+library(DECIPHER)
+library(Biostrings)
+library(dendextend)
+library(heatmaply)
+library(pheatmap)
 library(viridis)
 library(vegan)
-library(UpSetR)
 library(hrbrthemes)
+library(htmlwidgets)
 ```
 
 ## Data import
@@ -70,10 +75,12 @@ seqRFLP::dataframe2fas(core_fasta, "~/Desktop/sentrynels/Data/Phylo/ppe_core.fas
 
 Multiple alignment of sequences using the super5 algorithm in MUSCLE v5 (Edgar, year)
 
-## Dendrogram with maximum likelihood for PPE ASV core sequences
+## Maximum likelihood
+
+### Dendrogram with maximum likelihood for PPE ASV core sequences
 
 ```{r}
-malign <- "~/Desktop/sentrynels/Data/Phylo/core_multi_aligned.fasta"
+malign <- "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Phylo/core_multi_aligned.fasta"
 dbConn <-dbConnect(SQLite(), ":memory:")
 Seqs2DB(malign, type = "FASTA", dbFile = dbConn, "")
 x <- dbGetQuery(dbConn, "select description from Seqs")$description
@@ -91,6 +98,92 @@ dendro <- TreeLine(myDistMatrix = distance.matrix,
 dbDisconnect(dbConn)
 attributes(dendro)
 ```
+### Dendrogram edition 
+
+```{r}
+# Redundant, I know... But it works
+
+iclust <- as.dendrogram(as.hclust(dendro)) %>% dendextend::set("branches_lwd", 0.3) %>% dendextend::ladderize(right = TRUE) 
+plot(iclust)
+```
+## Heatmap
+
+### Data
+
+```{r}
+forheat <- abundance
+colnames(forheat) <- species
+heat_align <- Biostrings::readDNAMultipleAlignment(malign, format = "fasta")
+heat_matrix <- as.matrix(heat_align) %>% rownames() %>% as.vector()
+print(all(colnames(forheat)%in%gtools::mixedsort(heat_matrix, decreasing = FALSE)))
+forheat <- forheat[, rownames(as.matrix(heat_align))]
+hellinger <- vegan::decostand(forheat, method = "hellinger")
+write.csv2(hellinger, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Phylo/Hellinger_abundance_ppe_core.csv")
+bray_curtis <- vegan::vegdist(hellinger, method = "bray", diag = TRUE)
+```
+
+### Plot 
+
+#### Interactive
+
+```{r}
+imapheat <- heatmaply::heatmaply(normalize(hellinger), 
+                                 Colv = iclust, 
+                                 Rowv = NA,
+                                 scale_fill_gradient_fun = ggplot2::scale_fill_gradient2(low = "#FFFFFF", 
+                                                                                         mid = "#6EA5C9", 
+                                                                                         high = "#00308C", 
+                                                                                         midpoint = 0.5,
+                                                                                         limits = c(0,1)
+                                                                                         )
+                                 )
+saveWidget(imapheat, "./interactive_heatmap_core.html")
+```
+
+#### Static
+
+##### Format
+
+```{r}
+oclust <- as.dendrogram(as.hclust(dendro)) %>% dendextend::set("branches_lwd", 0.5) %>% dendextend::ladderize(right = FALSE) %>% as.hclust()
+sites <- c(rep("Chanaral", 12), rep("Flamenco", 12), rep("Huasco", 12), rep("Pta_Choros", 5), rep("Quintero", 10), rep("Las_Cruces", 12))
+mat_row <- data.frame(Sites = sites)
+rownames(mat_row) <- rownames(hellinger)
+mat_row$Sites <- factor(mat_row$Sites, levels = unique(mat_row$Sites))
+divs <- c("STRA", rep("CHLO", 3), rep("STRA", 2), "CHLO", "STRA", "CHLO", "STRA", "HAPT", "STRA", "CHLO", "CRYP", rep("CHLO", 2), "CRYP", rep("STRA", 3), "CRYP", rep("CHLO", 3), rep("HAPT", 2), "CRYP", rep("CHLO", 8), rep("STRA", 4), "CHLO", "HAPT", "KATA", "STRA", "CHLO", "KATA", "CHLO", rep("STRA", 3), "CHLO", "CRYP", "CHLO", "CRYP", "STRA", "NUCL", "CRYP", rep("STRA", 4), "CHLO", "CRYP", rep("CHLO", 3), "STRA", "CRYP", rep("STRA", 2), "NUCL", "CHLO", "STRA", "CRYP", "STRA", rep("CHLO", 2), rep("STRA", 5), "CHLO", rep("NUCL", 2), "STRA", rep("CHLO", 3), "STRA", "CHLO", "STRA", rep("CHLO", 2), rep("STRA", 4), rep("CHLO", 2), "KATA", "CHLO", "CRYP", "STRA", "CHLO", "CRYP", "CHLO")
+mat_col <- data.frame(Phylum = divs)
+rownames(mat_col) <- colnames(hellinger)
+mat_col$Phylum <- factor(mat_col$Phylum, levels = unique(mat_col$Phylum))
+mat_colors <- list(Sites = c(Chanaral = "#FF8811", Flamenco = "#F4D06F", Huasco = "#392F5A", Pta_Choros = "#403286", Quintero = "#18E0BD", Las_Cruces = "#80EB9F"), Phylum = c(CRYP = "#6CA6CD", STRA = "#CDAE94", HAPT = "#7EFFD3", CHLO = "#90ED90", NUCL = "#2E4756", KATA = "#C577F9"))
+```
+
+##### Plot
+
+```{r}
+statheat <- pheatmap(mat = as.matrix(normalize(hellinger)), 
+                     color = colorRampPalette(c("#E9F1F7", "#6EA5C9", "#00308C"))(10), 
+                     border_color = NA, 
+                     show_colnames = FALSE, 
+                     show_rownames = FALSE, 
+                     drop_levels = FALSE, 
+                     cluster_cols = oclust, 
+                     cluster_rows = FALSE, 
+                     cutree_cols = 6, 
+                     annotation_row = mat_row, 
+                     annotation_col = mat_col, 
+                     annotation_colors = mat_colors, 
+                     treeheight_col = 70, 
+                     cellheight = NA, 
+                     cellwidth = NA, 
+                     fontsize = 11, 
+                     legend = FALSE, 
+                     main = "PPE ASV's core with normalized relative abundance", 
+                     filename = "./Analysis/Phylo/Fig_14_static_heatmap_core.png", 
+                     width = 17, 
+                     height = 11, 
+                     silent = TRUE)
+```
+
 
 ## Extras
 
