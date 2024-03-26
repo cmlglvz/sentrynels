@@ -6,7 +6,7 @@ output: html_document
 
 ## Libraries
 
-```{r}
+```{r,echo=FALSE,include=FALSE}
 library(tidyverse)
 library(vegan)
 library(UpSetR)
@@ -16,7 +16,7 @@ library(hrbrthemes)
 ## Data import
 
 ```{r data}
-euks_complete <- read.csv("/Documents/Proyectos_R/sentrynels/Data/Characterization/Eukaryotes_characterization.csv", 
+euks_complete <- read.csv("/Users/Administrador/Desktop/Camilo/sentrynels/Data/Characterization/Eukaryotes_characterization.csv", 
                           header = TRUE, 
                           sep = ";", 
                           dec = ".", 
@@ -31,7 +31,7 @@ euks_upset <- euks_complete[,-c(1:2,72:81)] %>%
   vegan::decostand(method = "pa") %>% 
   add_column(Sequences = euks_complete$Sequences, 
              .before = "C1A17")
-write.csv2(euks_upset, "/Documents/Proyectos_R/sentrynels/Data/Core/Upset_formated_eukaryotes_data.csv")
+#write.csv2(euks_upset, "/Documents/Proyectos_R/sentrynels/Data/Core/Upset_formated_eukaryotes_data.csv")
 ```
 
 ## UpSet visualization
@@ -39,7 +39,7 @@ write.csv2(euks_upset, "/Documents/Proyectos_R/sentrynels/Data/Core/Upset_format
 ### Complete
 
 ```{r}
-png("/Documents/Proyectos_R/sentrynels/Analysis/Core/Fig_3_complete_upset_eukaryotes.png", width = 50, height = 23, units = "in", res = 300)
+png("/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/Core/Fig_3_complete_upset_eukaryotes.png", width = 50, height = 23, units = "in", res = 300)
 UpSetR::upset(euks_upset, 
               nsets = 6, 
               nintersects = NA, 
@@ -57,7 +57,7 @@ dev.off()
 ### Selected
 
 ```{r}
-png("/Documents/Proyectos_R/sentrynels/Analysis/Core/Fig_4_selected_upset_intersections_eukaryotes.png", width = 40, height = 17, units = "in", res = 300)
+png("/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/Core/Fig_4_selected_upset_intersections_eukaryotes.png", width = 40, height = 17, units = "in", res = 300)
 UpSetR::upset(euks_upset, 
               nsets = 6, 
               nintersects = NA, 
@@ -112,7 +112,7 @@ dev.off()
 core <- euks_upset %>% 
   dplyr::filter(Chanaral == 1 & Flamenco == 1 & Huasco == 1 & Pta_Choros == 1 & Quintero == 1 & Las_Cruces == 1)
 core_abundance <- euks_complete[row.names(euks_complete)%in%row.names(core),]
-write.csv2(core_abundance, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Core/Eukaryotes_core_asv_abundance.csv")
+#write.csv2(core_abundance, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Core/Eukaryotes_core_asv_abundance.csv")
 sum(core_abundance[,72])
 ```
 
