@@ -6,7 +6,7 @@ output: html_document
 
 ## Libraries
 
-```{r}
+```{r,echo=FALSE,include=FALSE}
 library(tidyverse)
 library(vegan)
 ```
@@ -14,7 +14,7 @@ library(vegan)
 ## Data import
 
 ```{r data}
-asv_table <- read.csv("C:/Users/Administrador/Desktop/Camilo/sentrynels/Data/DADA2/asv_table.csv", 
+asv_table <- read.csv("/Users/Administrador/Desktop/Camilo/sentrynels/Data/DADA2/asv_table.csv", 
                       header = TRUE, 
                       skip = 0, 
                       sep = ";", 
@@ -29,9 +29,9 @@ samples <- c("C1A17", "C1F18", "C1A18", "C2A17", "C2F18", "C2A18", "C3A17", "C3F
              "Q1A17", "Q1F18", "Q2A17", "Q2F18", "Q3A17", "Q3F18", "Q3A18", "Q4A17", "Q4F18", "Q4A18", 
              "L1A17", "L1F18", "L1A18", "L2A17", "L2F18", "L2A18", "L3A17", "L3F18", "L3A18", "L4A17", "L4F18", "L4A18") #63
 rownames(asv_table) <- samples
-write.csv2(asv_table, "C:/Users/Administrador/Desktop/Camilo/sentrynels/Data/Characterization/ASV_table.csv")
+#write.csv2(asv_table, "C:/Users/Administrador/Desktop/Camilo/sentrynels/Data/Characterization/ASV_table.csv")
 
-taxa <- read.csv("C:/Users/Administrador/Desktop/Camilo/sentrynels/Data/DADA2/assigned_taxa.csv", 
+taxa <- read.csv("https://raw.githubusercontent.com/cmlglvz/sentrynels/main/Data/DADA2/assigned_taxa.csv", 
                  header = TRUE,
                  sep = ";", 
                  skip = 0) %>% 
@@ -42,7 +42,7 @@ taxa <- read.csv("C:/Users/Administrador/Desktop/Camilo/sentrynels/Data/DADA2/as
                      str_glue("ASV{1000:6192}")), 
              .after = "Sequences") # Lucas' solution
 rownames(taxa) <- taxa[,1]
-write.csv2(taxa, "C:/Users/Administrador/Desktop/Camilo/sentrynels/Data/Characterization/Taxa.csv")
+#write.csv2(taxa, "C:/Users/Administrador/Desktop/Camilo/sentrynels/Data/Characterization/Taxa.csv")
 
 # Sanity check LABMICMAR: if TRUE you can continue...
 print(all(colnames(asv_table)%in%rownames(taxa)))
