@@ -6,9 +6,11 @@ output: html_document
 
 ## Libraries
 
-```{r,echo=FALSE,include=FALSE}
+```{r,echo=FALSE,include=FALSE,warning=FALSE,message=FALSE}
 library(tidyverse)
 library(vegan)
+library(viridis)
+library(hrbrthemes)
 ```
 
 ## Data import
@@ -17,8 +19,15 @@ library(vegan)
 euks_complete <- read.csv("https://raw.githubusercontent.com/cmlglvz/sentrynels/main/Data/Characterization/Eukaryotes_characterization.csv", 
                           header = TRUE, 
                           sep = ";", 
-                          dec = ".", 
+                          skip = 0, 
                           row.names = 1)
+environmental <- read.csv("https://raw.githubusercontent.com/cmlglvz/sentrynels/main/Data/Diversity/Environmental_data.csv", 
+                           header = TRUE, 
+                           sep = ";", 
+                           dec = ".", 
+                           skip = 0,
+                           row.names = 1)
+environmental$Site <- factor(environmental$Site, levels = as.character(unique(environmental$Site)))
 ```
 
 ## Data edition
@@ -28,130 +37,189 @@ abundance <- euks_complete[,c(3:65)] %>% t() %>% as.data.frame()
 taxa <- euks_complete[,-c(3:72)]
 ```
 
-## Chao1
+## Richness
 
 ```{r}
-
+ssenhcir <- with(environmental, specpool(abundance, Site))
+richness <- with(environmental, estimateR(abundance, Site)) %>% 
+  t() %>% as.data.frame() %>% 
+  add_column(Site = environmental$Site, .name_repair = "minimal")
 ```
 
-### Selected
+### Chao1
 
 ```{r}
-png("/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/Core/Fig_4_selected_upset_intersections_eukaryotes.png", width = 40, height = 17, units = "in", res = 300)
-UpSetR::upset(euks_upset, 
-              nsets = 6, 
-              nintersects = NA, 
-              sets = c("Las_Cruces", "Quintero", "Pta_Choros", "Huasco", "Flamenco", "Chanaral"), 
-              intersections = list("Las_Cruces", 
-                                   "Quintero", 
-                                   "Pta_Choros", 
-                                   "Huasco", 
-                                   "Flamenco", 
-                                   "Chanaral", 
-                                   list("Chanaral", "Flamenco"), 
-                                   list("Huasco", "Pta_Choros"), 
-                                   list("Quintero", "Las_Cruces"),
-                                   list("Chanaral", "Huasco"), 
-                                   list("Chanaral", "Quintero"), 
-                                   list("Huasco", "Quintero"), 
-                                   list("Flamenco", "Pta_Choros"),
-                                   list("Flamenco", "Las_Cruces"), 
-                                   list("Pta_Choros", "Las_Cruces"), 
-                                   list("Quintero", "Las_Cruces"), 
-                                   list("Chanaral", "Huasco", "Quintero"), 
-                                   list("Flamenco", "Pta_Choros", "Las_Cruces"), 
-                                   list("Chanaral", "Flamenco", "Huasco", "Pta_Choros"), 
-                                   list("Chanaral", "Flamenco", "Huasco", "Pta_Choros", "Quintero"), 
-                                   list("Chanaral", "Flamenco", "Huasco", "Pta_Choros", "Las_Cruces"), 
-                                   list("Chanaral", "Flamenco", "Huasco", "Pta_Choros", "Quintero", "Las_Cruces")
-                                   ), 
-              empty.intersections = "on", 
-              keep.order = TRUE, 
-              query.legend = "top", 
-              queries = list(list(query = intersects, params = "Chanaral", color = "#FF8811", active = TRUE, query.name = "Unique Chañaral ASVs"), 
-                             list(query = intersects, params = "Flamenco", color = "#F4D06F", active = TRUE, query.name = "Unique Flamenco ASVs"), 
-                             list(query = intersects, params = "Huasco", color = "#392F5A", active = TRUE, query.name = "Unique Huasco ASVs"), 
-                             list(query = intersects, params = "Pta_Choros", color = "#403286", active = TRUE, query.name = "Unique Punta Choros ASVs"), 
-                             list(query = intersects, params = "Quintero", color = "#18E0BD", active = TRUE, query.name = "Unique Quintero ASVs"), 
-                             list(query = intersects, params = "Las_Cruces", color = "#80EB9F", active = TRUE, query.name = "Unique Las Cruces ASVs"), 
-                             list(query = intersects, params = list("Chanaral", "Flamenco", "Huasco", "Pta_Choros", "Quintero", "Las_Cruces"), color = "#EF233C", active = TRUE, query.name = "Shared ASVs")
-                             ), 
-              point.size = 3.5, 
-              line.size = 1.5, 
-              text.scale = 3, 
-              mainbar.y.label = "Sites Intersections", 
-              sets.x.label = "ASVs per sampling site")
-dev.off()
+chao1 <- richness %>% 
+  rename("Chao1" = "S.chao1") %>% 
+  ggplot(aes(x = Site,
+             y = Chao1,
+             fill = Site)) + 
+  geom_violin(width = 1.2) + 
+  geom_boxplot(width = 0.2, 
+               color = "grey", 
+               alpha = 0.7) + 
+  scale_fill_viridis(discrete = TRUE) + 
+  geom_jitter(color = "#4C443C", 
+              size = 1, 
+              alpha = 0.6) +
+  theme_ipsum() + 
+  theme(legend.position = "none") + 
+  ggtitle("Chao1 richness")
+ggsave(plot = chao1,
+       filename = "Fig_15_chao1_richness.png", 
+       path = "/Documents/Proyectos_R/sentrynels/Analysis/Diversity/", 
+       width = 15, 
+       height = 9, 
+       dpi = 600)
 ```
 
-## ASV identification
-
-### Core (Shared)
+### ACE
 
 ```{r}
-core <- euks_upset %>% 
-  dplyr::filter(Chanaral == 1 & Flamenco == 1 & Huasco == 1 & Pta_Choros == 1 & Quintero == 1 & Las_Cruces == 1)
-core_abundance <- euks_complete[row.names(euks_complete)%in%row.names(core),]
-#write.csv2(core_abundance, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Core/Eukaryotes_core_asv_abundance.csv")
-sum(core_abundance[,72])
+ace <- richness %>% 
+  rename("ACE" = "S.ACE") %>% 
+  ggplot(aes(x = Site,
+             y = ACE,
+             fill = Site)) + 
+  geom_violin(width = 1.2) + 
+  geom_boxplot(width = 0.2, 
+               color = "grey", 
+               alpha = 0.7) + 
+  scale_fill_viridis(discrete = TRUE) + 
+  geom_jitter(color = "#4C443C", 
+              size = 1, 
+              alpha = 0.6) +
+  theme_ipsum() + 
+  theme(legend.position = "none") + 
+  ggtitle("ACE richness")
+ggsave(plot = ace,
+       filename = "Fig_16_ACE_richness.png", 
+       path = "/Documents/Proyectos_R/sentrynels/Analysis/Diversity/", 
+       width = 15, 
+       height = 9, 
+       dpi = 600)
 ```
 
-### Uniques per site
+##Shannon
 
 ```{r}
-chanaral <- euks_upset %>% 
-  dplyr::filter(Chanaral == 1 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 0)
-chanaral_abundance <- euks_complete[row.names(euks_complete)%in%row.names(chanaral),]
-
-flamenco <- euks_upset %>% 
-  dplyr::filter(Chanaral == 0 & Flamenco == 1 & Huasco == 0 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 0)
-flamenco_abundance <- euks_complete[row.names(euks_complete)%in%row.names(flamenco),]
-
-huasco <- euks_upset %>% 
-  dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 1 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 0)
-huasco_abundance <- euks_complete[row.names(euks_complete)%in%row.names(huasco),]
-
-pta_choros <- euks_upset %>% 
-  dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 1 & Quintero == 0 & Las_Cruces == 0)
-ptachoros_abundance <- euks_complete[row.names(euks_complete)%in%row.names(pta_choros),]
-
-quintero <- euks_upset %>% 
-  dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 0 & Quintero == 1 & Las_Cruces == 0)
-quintero_abundance <- euks_complete[row.names(euks_complete)%in%row.names(quintero),]
-
-las_cruces <- euks_upset %>% 
-  dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 1)
-lascruces_abundance <- euks_complete[row.names(euks_complete)%in%row.names(las_cruces),]
+nonnahs <- with(environmental, diversity(abundance, index = "shannon", groups = Site, equalize.groups = FALSE))
+shannon <- diversity(abundance, index = "shannon", equalize.groups = FALSE) %>% 
+  as.matrix() %>% as.data.frame() %>% add_column(Site = environmental$Site, .name_repair = "minimal") %>% 
+  rename("Shannon" = V1)
+shplot <- shannon %>% 
+  ggplot(aes(x = Site, 
+             y = Shannon, 
+             fill = Site)) + 
+  geom_violin(width = 1.1) + 
+  geom_boxplot(width = 0.1, 
+               color = "white", 
+               alpha = 0.3) + 
+  scale_fill_viridis(discrete = TRUE, alpha = 0.8) + 
+  geom_jitter(color = "#4C443C", 
+              size = 1, 
+              alpha = 0.6) + 
+  theme_ipsum() + 
+  theme(legend.position = "none") + 
+  ggtitle("Shannon diversity")
+ggsave(plot = shplot,
+       filename = "Fig_17_shannon_diversity.png", 
+       path = "/Documents/Proyectos_R/sentrynels/Analysis/Diversity/", 
+       width = 15, 
+       height = 9, 
+       dpi = 600)
 ```
 
-### Others (The rest of ASV that are not considered shared or unique)
+## Simpson
 
 ```{r}
-#NOTE: in this point we are subsetting the information directly from abundance table
-others <- euks_complete[!row.names(euks_complete)%in%row.names(core),]
-others <- others[!row.names(others)%in%row.names(chanaral),]
-others <- others[!row.names(others)%in%row.names(flamenco),]
-others <- others[!row.names(others)%in%row.names(huasco),]
-others <- others[!row.names(others)%in%row.names(pta_choros),]
-others <- others[!row.names(others)%in%row.names(quintero),]
-others <- others[!row.names(others)%in%row.names(las_cruces),]
+nospmis <- with(environmental, diversity(abundance, index = "simpson", groups = Site, equalize.groups = FALSE))
+simpson <- diversity(abundance, index = "simpson", equalize.groups = FALSE) %>% 
+  as.matrix() %>% as.data.frame() %>% add_column(Site = environmental$Site, .name_repair = "minimal") %>% 
+  rename("Simpson" = V1)
+simplot <- simpson %>% 
+  ggplot(aes(x = Site, 
+             y = Simpson, 
+             fill = Site)) + 
+  geom_violin(width = 1.1) + 
+  geom_boxplot(width = 0.1, 
+               color = "white", 
+               alpha = 0.3) + 
+  scale_fill_viridis(discrete = TRUE, alpha = 0.8) + 
+  geom_jitter(color = "#4C443C", 
+              size = 1, 
+              alpha = 0.6) + 
+  theme_ipsum() + 
+  theme(legend.position = "none") + 
+  ggtitle("Simpson diversity")
+ggsave(plot = simplot,
+       filename = "Fig_18_simpson_diversity.png", 
+       path = "/Documents/Proyectos_R/sentrynels/Analysis/Diversity/", 
+       width = 15, 
+       height = 9, 
+       dpi = 600)
 ```
 
-## Groups abundances
+## Invsimpson
 
 ```{r}
-asv_types <- read.csv("/Users/Administrador/Desktop/Camilo/sentrynels/Data/Core/Eukaryotes_ASV_type_abundance.csv", 
-                      header = TRUE, 
-                      sep = ";", 
-                      skip = 0) %>% 
-  dplyr::rename(Site = X)
-asv_types$Site <- factor(asv_types$Site, levels = c("Chanaral", "Flamenco", "Huasco", "Pta_Choros", "Quintero", "Las_Cruces"))
-# Transform into long dataframe for ploting
-long_types <- reshape2::melt(asv_types[,-5], id.vars = "Site", variable.name = "Type") %>% dplyr::rename(Abundance = value) # you can use pivot_longer() instead
-long_types$Type <- factor(long_types$Type, levels = c("Unique", "Other", "Shared"))
+vni <- with(environmental, diversity(abundance, index = "invsimpson", groups = Site, equalize.groups = FALSE))
+inv <- diversity(abundance, index = "invsimpson", equalize.groups = FALSE) %>% 
+  as.matrix() %>% as.data.frame() %>% add_column(Site = environmental$Site, .name_repair = "minimal") %>% 
+  rename("Invsimpson" = V1)
+iplot <- inv %>% 
+  ggplot(aes(x = Site, 
+             y = Invsimpson, 
+             fill = Site)) + 
+  geom_violin(width = 1.1) + 
+  geom_boxplot(width = 0.1, 
+               color = "white", 
+               alpha = 0.3) + 
+  scale_fill_viridis(discrete = TRUE, alpha = 0.8) + 
+  geom_jitter(color = "#4C443C", 
+              size = 1, 
+              alpha = 0.6) + 
+  theme_ipsum() + 
+  theme(legend.position = "none") + 
+  ggtitle("Invsimpson diversity")
+ggsave(plot = iplot,
+       filename = "Fig_19_invsimpson_diversity.png", 
+       path = "/Documents/Proyectos_R/sentrynels/Analysis/Diversity/", 
+       width = 15, 
+       height = 9, 
+       dpi = 600)
 ```
 
-## Abundances plot
+### Alternative
+
+```{r}
+unbiased <- simpson.unb(x = abundance) %>% 
+  as.matrix() %>% as.data.frame() %>% add_column(Site = environmental$Site, .name_repair = "minimal") %>% 
+  rename("Unbiased" = V1)
+unbplot <- unbiased %>% 
+  ggplot(aes(x = Site, 
+             y = Unbiased, 
+             fill = Site)) + 
+  geom_violin(width = 1.1) + 
+  geom_boxplot(width = 0.1, 
+               color = "white", 
+               alpha = 0.3) + 
+  scale_fill_viridis(discrete = TRUE, alpha = 0.8) + 
+  geom_jitter(color = "#4C443C", 
+              size = 1, 
+              alpha = 0.6) + 
+  labs(y = "Unbiased Simpson index") + 
+  theme_ipsum() + 
+  theme(legend.position = "none") + 
+  ggtitle("Unbiased simpson richness")
+ggsave(plot = unbplot,
+       filename = "Fig_20_unbiased_simpson_diversity.png", 
+       path = "/Documents/Proyectos_R/sentrynels/Analysis/Diversity/", 
+       width = 15, 
+       height = 9, 
+       dpi = 600)
+```
+
 
 ```{r}
 aplot <- ggplot(long_types, 
