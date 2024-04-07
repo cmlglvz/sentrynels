@@ -62,19 +62,20 @@ for (y in 1:6) {
 }
 ```
 
-## Node type identification
+## Node type identification (WORKING HERE)
 
 ```{r}
 path_u <- cbind(rep("/Documents/Proyectos_R/sentrynels/Data/Network/unique_", 6), c("001", "002", "003", "004", "005", "006"), rep(".csv", 6))
 ppe <- read.table("/Documents/Proyectos_R/sentrynels/Data/Network/ppe.csv", sep = ";", h = FALSE)
 core <- read.table("/Documents/Proyectos_R/sentrynels/Data/Network/core.csv", sep = ";", h = FALSE)
+other <- read.table("/Documents/Proyectos_R/sentrynels/Data/Network/others.csv", sep = ";", h = FALSE)
 
 node_t_class <- list()
 ulist <- list()
 for (i in 1:dim(path_u)[1]) {
   ulist[[i]] <- read.table(paste0(path_u[i,1], path_u[i,2], path_u[i,3]), sep = ";", h = FALSE)
   node_t_class[[i]] <- node_t[[i]] %>% 
-    dplyr::mutate("Node_Category" = case_when(Node %in%  t(ulist[[i]])[,1]~"Unique", Node %in% t(ppe[1,-1])~"PPE", Node %in% t(core[1,-1])~"Core", TRUE~"Other"))
+    dplyr::mutate("Node_Category" = case_when(Node %in%  t(ulist[[i]])[,1]~"Unique", Node %in% t(core[1,-1])~"Shared", Node %in% t(ppe[1,-1])~"Core", TRUE~"Other"))
   write.table(node_t_class[[i]],str_glue("/Documents/Proyectos_R/sentrynels/Data/Network/net_creation/t{i}/node_mat_t{i}.csv"), sep = "\t", dec = ".")
 }
 
