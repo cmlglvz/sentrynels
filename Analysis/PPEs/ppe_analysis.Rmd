@@ -179,3 +179,11 @@ ggsave(plot = aplot,
        dpi = 600)
 ```
 
+## For network analysis
+
+```{r}
+pepes <- ppe_upset %>% filter(Chanaral == 1 & Flamenco == 1 & Huasco == 1 & Pta_Choros == 1 & Quintero == 1 & Las_Cruces == 1)
+pps <- ppes[row.names(ppes)%in%row.names(pepes),]
+write.csv2(as.data.frame(t(pps[,c(3:65)])), "/Documents/Proyectos_R/sentrynels/Data/PPE/ppe.csv")
+```
+
