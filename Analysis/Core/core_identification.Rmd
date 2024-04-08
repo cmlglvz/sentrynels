@@ -122,26 +122,32 @@ sum(core_abundance[,72])
 chanaral <- euks_upset %>% 
   dplyr::filter(Chanaral == 1 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 0)
 chanaral_abundance <- euks_complete[row.names(euks_complete)%in%row.names(chanaral),]
+write.csv2(as.data.frame(t(chanaral_abundance[,c(3:65)])), "/Documents/Proyectos_R/sentrynels/Data/Core/unique_001.csv")
 
 flamenco <- euks_upset %>% 
   dplyr::filter(Chanaral == 0 & Flamenco == 1 & Huasco == 0 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 0)
 flamenco_abundance <- euks_complete[row.names(euks_complete)%in%row.names(flamenco),]
+write.csv2(as.data.frame(t(flamenco_abundance[,c(3:65)])), "/Documents/Proyectos_R/sentrynels/Data/Core/unique_002.csv")
 
 huasco <- euks_upset %>% 
   dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 1 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 0)
 huasco_abundance <- euks_complete[row.names(euks_complete)%in%row.names(huasco),]
+write.csv2(as.data.frame(t(huasco_abundance[,c(3:65)])), "/Documents/Proyectos_R/sentrynels/Data/Core/unique_003.csv")
 
 pta_choros <- euks_upset %>% 
   dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 1 & Quintero == 0 & Las_Cruces == 0)
 ptachoros_abundance <- euks_complete[row.names(euks_complete)%in%row.names(pta_choros),]
+write.csv2(as.data.frame(t(ptachoros_abundance[,c(3:65)])), "/Documents/Proyectos_R/sentrynels/Data/Core/unique_004.csv")
 
 quintero <- euks_upset %>% 
   dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 0 & Quintero == 1 & Las_Cruces == 0)
 quintero_abundance <- euks_complete[row.names(euks_complete)%in%row.names(quintero),]
+write.csv2(as.data.frame(t(quintero_abundance[,c(3:65)])), "/Documents/Proyectos_R/sentrynels/Data/Core/unique_005.csv")
 
 las_cruces <- euks_upset %>% 
   dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta_Choros == 0 & Quintero == 0 & Las_Cruces == 1)
 lascruces_abundance <- euks_complete[row.names(euks_complete)%in%row.names(las_cruces),]
+write.csv2(as.data.frame(t(lascruces_abundance[,c(3:65)])), "/Documents/Proyectos_R/sentrynels/Data/Core/unique_006.csv")
 ```
 
 ### Others (The rest of ASV that are not considered shared or unique)
@@ -155,6 +161,8 @@ others <- others[!row.names(others)%in%row.names(huasco),]
 others <- others[!row.names(others)%in%row.names(pta_choros),]
 others <- others[!row.names(others)%in%row.names(quintero),]
 others <- others[!row.names(others)%in%row.names(las_cruces),]
+oth <- others[,c(3:65)]
+write.csv2(as.data.frame(t(others[,c(3:65)])),"/Documents/Proyectos_R/sentrynels/Data/Core/others.csv")
 ```
 
 ## Groups abundances
@@ -194,5 +202,23 @@ ggsave(plot = aplot,
        width = 23, 
        height = 15, 
        dpi = 600)
+```
+
+## For network analysis
+
+### ASV/site
+
+```{r}
+todas <- euks_upset %>% filter(Las_Cruces == 1)
+t <- euks_complete[row.names(euks_complete)%in%row.names(todas), ]
+t <- t[,c(3:65)] %>% t() %>% as.data.frame()
+write.csv2(t, "/Documents/Proyectos_R/sentrynels/Data/Core/t6.csv")
+```
+
+```{r}
+compartidas <- euks_upset %>% filter(Chanaral == 1 & Flamenco == 1 & Huasco == 1 & Pta_Choros == 1 & Quintero == 1 & Las_Cruces == 1)
+shared <- euks_complete[row.names(euks_complete)%in%row.names(compartidas),]
+shared <- shared[,c(3:65)] %>% t() %>% as.data.frame()
+write.csv2(shared, "/Documents/Proyectos_R/sentrynels/Data/Core/shared.csv")
 ```
 
