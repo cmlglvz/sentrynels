@@ -348,3 +348,127 @@ upgrade_graph(graphlist[[6]])
 createNetworkFromIgraph(graphlist[[6]],new.title='Las_Cruces')
 ```
 
+## AUX
+
+### Core
+
+```{r}
+coregraph <- list()
+core.cc <- NULL
+core.avpath <- NULL
+core.ctance <- NULL
+core.mdeg <- NULL
+core.modul <- NULL
+core.clusters <- NULL
+core.diam <- NULL
+core.size <- NULL
+core.order <- NULL
+for (x in 1:6) {
+  coregraph[[x]] <- induced_subgraph(graphlist[[x]], 
+                                     which(V(graphlist[[x]])$Node_Category == "Core"))
+  core.size[x] <- gsize(coregraph[[x]])
+  core.order[x] <- gorder(coregraph[[x]])
+  core.cc[x] <- transitivity(coregraph[[x]], type = "average")
+  core.avpath[x] <- mean_distance(coregraph[[x]], directed = TRUE, unconnected = TRUE)
+  core.ctance[x] <-edge_density(coregraph[[x]], loops = FALSE)
+  core.mdeg[x] <- mean(degree(coregraph[[x]]))
+  core.modul[x] <-modularity(fastgreedy.community(coregraph[[x]], merges = FALSE, modularity = TRUE))
+  core.clusters[x] <- length(fastgreedy.community(coregraph[[x]], merges = FALSE, modularity = TRUE))
+  core.diam[x] <- diameter(coregraph[[x]], directed = FALSE, unconnected = TRUE)
+}
+
+path <- c("Chanaral", "Flamenco", "Huasco", "Pta_Choros", "Quintero", "Las_Cruces")
+
+core_stats <- data.frame("Connectance" = core.ctance, 
+                         "Average_Degree" = core.mdeg, 
+                         "Diameter" = core.diam, 
+                         "Average_path_length" = core.avpath, 
+                         "Cluster_coefficientt" = core.cc, 
+                         "Modularity" = core.modul, 
+                         "Number_of_clusters" = core.clusters, 
+                         "Nodes" = core.order, 
+                         "Edges" = core.size, 
+                         "Net" = path) %>% relocate(Net)
+write.csv(core_stats, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Network/Products/core_stats.csv")
+```
+
+### Unique
+
+```{r}
+unigraph <- list()
+uni.cc <- NULL
+uni.avpath <- NULL
+uni.ctance <- NULL
+uni.mdeg <- NULL
+uni.modul <- NULL
+uni.clusters <- NULL
+uni.diam <- NULL
+uni.size <- NULL
+uni.order <- NULL
+for (x in 1:6) {
+  unigraph[[x]] <- induced_subgraph(graphlist[[x]], 
+                                     which(V(graphlist[[x]])$Node_Category == "Unique"))
+  uni.size[x] <- gsize(unigraph[[x]])
+  uni.order[x] <- gorder(unigraph[[x]])
+  uni.cc[x] <- transitivity(unigraph[[x]], type = "average")
+  uni.avpath[x] <- mean_distance(unigraph[[x]], directed = TRUE, unconnected = TRUE)
+  uni.ctance[x] <-edge_density(unigraph[[x]], loops = FALSE)
+  uni.mdeg[x] <- mean(degree(unigraph[[x]]))
+  uni.modul[x] <-modularity(fastgreedy.community(unigraph[[x]], merges = FALSE, modularity = TRUE))
+  uni.clusters[x] <- length(fastgreedy.community(unigraph[[x]], merges = FALSE, modularity = TRUE))
+  uni.diam[x] <- diameter(unigraph[[x]], directed = FALSE, unconnected = TRUE)
+}
+
+uni_stats <- data.frame("Connectance" = uni.ctance, 
+                         "Average_Degree" = uni.mdeg, 
+                         "Diameter" = uni.diam, 
+                         "Average_path_length" = uni.avpath, 
+                         "Cluster_coefficientt" = uni.cc, 
+                         "Modularity" = uni.modul, 
+                         "Number_of_clusters" = uni.clusters, 
+                         "Nodes" = uni.order, 
+                         "Edges" = uni.size, 
+                         "Net" = path) %>% relocate(Net)
+write.csv(uni_stats, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Network/Products/unique_stats.csv")
+```
+
+### Other
+
+```{r}
+othgraph <- list()
+oth.cc <- NULL
+oth.avpath <- NULL
+oth.ctance <- NULL
+oth.mdeg <- NULL
+oth.modul <- NULL
+oth.clusters <- NULL
+oth.diam <- NULL
+oth.size <- NULL
+oth.order <- NULL
+for (x in 1:6) {
+  othgraph[[x]] <- induced_subgraph(graphlist[[x]], 
+                                     which(V(graphlist[[x]])$Node_Category == "Other"))
+  oth.size[x] <- gsize(othgraph[[x]])
+  oth.order[x] <- gorder(othgraph[[x]])
+  oth.cc[x] <- transitivity(othgraph[[x]], type = "average")
+  oth.avpath[x] <- mean_distance(othgraph[[x]], directed = TRUE, unconnected = TRUE)
+  oth.ctance[x] <-edge_density(othgraph[[x]], loops = FALSE)
+  oth.mdeg[x] <- mean(degree(othgraph[[x]]))
+  oth.modul[x] <-modularity(fastgreedy.community(othgraph[[x]], merges = FALSE, modularity = TRUE))
+  oth.clusters[x] <- length(fastgreedy.community(othgraph[[x]], merges = FALSE, modularity = TRUE))
+  oth.diam[x] <- diameter(othgraph[[x]], directed = FALSE, unconnected = TRUE)
+}
+
+oth_stats <- data.frame("Connectance" = oth.ctance, 
+                         "Average_Degree" = oth.mdeg, 
+                         "Diameter" = oth.diam, 
+                         "Average_path_length" = oth.avpath, 
+                         "Cluster_coefficientt" = oth.cc, 
+                         "Modularity" = oth.modul, 
+                         "Number_of_clusters" = oth.clusters, 
+                         "Nodes" = oth.order, 
+                         "Edges" = oth.size, 
+                         "Net" = path) %>% relocate(Net)
+write.csv(oth_stats, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Network/Products/other_stats.csv")
+```
+
