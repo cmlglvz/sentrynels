@@ -1,5 +1,5 @@
 ---
-title: "Diversity"
+title: "Diversity_CORE"
 author: "CGA"
 output: html_document
 ---
@@ -16,7 +16,7 @@ library(hrbrthemes)
 ## Data import
 
 ```{r data}
-euks_complete <- read.csv("https://raw.githubusercontent.com/cmlglvz/sentrynels/main/Data/Characterization/Eukaryotes_characterization.csv", 
+core_complete <- read.csv("https://raw.githubusercontent.com/cmlglvz/sentrynels/main/Data/PPE/Ppe_core_asv_abundance.csv", 
                           header = TRUE, 
                           sep = ";", 
                           skip = 0, 
@@ -33,19 +33,17 @@ environmental$Site <- factor(environmental$Site, levels = as.character(unique(en
 ## Data edition
 
 ```{r}
-abundance <- euks_complete[,c(3:65)] %>% t() %>% as.data.frame()
-taxa <- euks_complete[,-c(3:72)]
+abundance <- core_complete[,c(3:65)] %>% t() %>% as.data.frame()
+taxa <- core_complete[,-c(3:72)]
 ```
 
 ## Richness
 
 ```{r}
-ssenhcir <- with(environmental, specpool(abundance, Site))
-write.csv2(richness, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Diversity/richness_data.csv")
-write.csv(richness, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Diversity/richness_data_2.csv")
 richness <- with(environmental, estimateR(abundance, Site)) %>% 
   t() %>% as.data.frame() %>% 
   add_column(Site = environmental$Site, .name_repair = "minimal")
+write.csv(richness, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Diversity/core_richness.csv")
 ```
 
 ### Chao1
@@ -68,8 +66,8 @@ chao1 <- richness %>%
   theme(legend.position = "none") + 
   ggtitle("Chao1 richness")
 ggsave(plot = chao1,
-       filename = "Fig_15_chao1_richness.png", 
-       path = "/Documents/Proyectos_R/sentrynels/Analysis/Diversity/", 
+       filename = "Fig_27_core_chao1_richness.png", 
+       path = "/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/Diversity/", 
        width = 15, 
        height = 9, 
        dpi = 600)
@@ -95,8 +93,8 @@ ace <- richness %>%
   theme(legend.position = "none") + 
   ggtitle("ACE richness")
 ggsave(plot = ace,
-       filename = "Fig_16_ACE_richness.png", 
-       path = "/Documents/Proyectos_R/sentrynels/Analysis/Diversity/", 
+       filename = "Fig_28_core_ACE_richness.png", 
+       path = "/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/Diversity/", 
        width = 15, 
        height = 9, 
        dpi = 600)
@@ -105,11 +103,10 @@ ggsave(plot = ace,
 ## Shannon
 
 ```{r}
-nonnahs <- with(environmental, diversity(abundance, index = "shannon", groups = Site, equalize.groups = FALSE))
-write.csv(shannon, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Diversity/shannon_data.csv")
 shannon <- diversity(abundance, index = "shannon", equalize.groups = FALSE) %>% 
   as.matrix() %>% as.data.frame() %>% add_column(Site = environmental$Site, .name_repair = "minimal") %>% 
   rename("Shannon" = V1)
+write.csv(shannon, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Diversity/core_shannon.csv")
 shplot <- shannon %>% 
   ggplot(aes(x = Site, 
              y = Shannon, 
@@ -126,8 +123,8 @@ shplot <- shannon %>%
   theme(legend.position = "none") + 
   ggtitle("Shannon diversity")
 ggsave(plot = shplot,
-       filename = "Fig_17_shannon_diversity.png", 
-       path = "/Documents/Proyectos_R/sentrynels/Analysis/Diversity/", 
+       filename = "Fig_29_core_shannon_diversity.png", 
+       path = "/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/Diversity/", 
        width = 15, 
        height = 9, 
        dpi = 600)
@@ -136,11 +133,10 @@ ggsave(plot = shplot,
 ## Simpson
 
 ```{r}
-nospmis <- with(environmental, diversity(abundance, index = "simpson", groups = Site, equalize.groups = FALSE))
-write.csv(simpson, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Diversity/simpson_data.csv")
 simpson <- diversity(abundance, index = "simpson", equalize.groups = FALSE) %>% 
   as.matrix() %>% as.data.frame() %>% add_column(Site = environmental$Site, .name_repair = "minimal") %>% 
   rename("Simpson" = V1)
+write.csv(simpson, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Diversity/core_simpson.csv")
 simplot <- simpson %>% 
   ggplot(aes(x = Site, 
              y = Simpson, 
@@ -157,8 +153,8 @@ simplot <- simpson %>%
   theme(legend.position = "none") + 
   ggtitle("Simpson diversity")
 ggsave(plot = simplot,
-       filename = "Fig_18_simpson_diversity.png", 
-       path = "/Documents/Proyectos_R/sentrynels/Analysis/Diversity/", 
+       filename = "Fig_30_core_simpson_diversity.png", 
+       path = "/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/Diversity/", 
        width = 15, 
        height = 9, 
        dpi = 600)
@@ -167,11 +163,10 @@ ggsave(plot = simplot,
 ## Invsimpson
 
 ```{r}
-vni <- with(environmental, diversity(abundance, index = "invsimpson", groups = Site, equalize.groups = FALSE)) 
-write.csv(inv, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Diversity/invsimpson_data.csv")
 inv <- diversity(abundance, index = "invsimpson", equalize.groups = FALSE) %>% 
   as.matrix() %>% as.data.frame() %>% add_column(Site = environmental$Site, .name_repair = "minimal") %>% 
   rename("Invsimpson" = V1)
+write.csv(inv, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Diversity/core_invsimpson_data.csv")
 iplot <- inv %>% 
   ggplot(aes(x = Site, 
              y = Invsimpson, 
@@ -188,8 +183,8 @@ iplot <- inv %>%
   theme(legend.position = "none") + 
   ggtitle("Invsimpson diversity")
 ggsave(plot = iplot,
-       filename = "Fig_19_invsimpson_diversity.png", 
-       path = "/Documents/Proyectos_R/sentrynels/Analysis/Diversity/", 
+       filename = "Fig_31_core_invsimpson_diversity.png", 
+       path = "/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/Diversity/", 
        width = 15, 
        height = 9, 
        dpi = 600)
@@ -201,7 +196,7 @@ ggsave(plot = iplot,
 unbiased <- simpson.unb(x = abundance) %>% 
   as.matrix() %>% as.data.frame() %>% add_column(Site = environmental$Site, .name_repair = "minimal") %>% 
   rename("Unbiased" = V1)
-write.csv(unbiased, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Diversity/unbiased_simpson.csv")
+write.csv(unbiased, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Diversity/core_unbiased_simpson.csv")
 unbplot <- unbiased %>% 
   ggplot(aes(x = Site, 
              y = Unbiased, 
@@ -219,8 +214,8 @@ unbplot <- unbiased %>%
   theme(legend.position = "none") + 
   ggtitle("Unbiased simpson richness")
 ggsave(plot = unbplot,
-       filename = "Fig_20_unbiased_simpson_diversity.png", 
-       path = "/Documents/Proyectos_R/sentrynels/Analysis/Diversity/", 
+       filename = "Fig_32_core_unbiased_simpson_diversity.png", 
+       path = "/Users/Administrador/Desktop/Camilo/sentrynels/Analysis/Diversity/", 
        width = 15, 
        height = 9, 
        dpi = 600)
