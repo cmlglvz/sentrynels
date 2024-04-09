@@ -472,3 +472,11 @@ oth_stats <- data.frame("Connectance" = oth.ctance,
 write.csv(oth_stats, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Network/Products/other_stats.csv")
 ```
 
+### HELP
+
+```{r}
+cytoscapePing()
+upgrade_graph(coregraph[[1]])
+createNetworkFromIgraph(coregraph[[1]],new.title='Chanaral')
+```
+
