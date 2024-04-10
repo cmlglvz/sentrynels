@@ -475,6 +475,18 @@ write.csv(oth_stats, "/Users/Administrador/Desktop/Camilo/sentrynels/Data/Networ
 ### HELP
 
 ```{r}
+#make function
+example <- data.frame("ASV" = V(coregraph[[1]])$name, 
+                      "Node_Category" = V(coregraph[[1]])$Node_Category, 
+                      "Eigen_Centrality" = V(coregraph[[1]])$eigen, 
+                      "Degree_Centrality" = V(coregraph[[1]])$degree, 
+                      "Betweenness_Centrality" = V(coregraph[[1]])$betweenness, 
+                      "Membership" = V(coregraph[[1]])$membership)
+write.csv2(example, "/Documents/Proyectos_R/sentrynels/Data/Network/Products/example_table.csv")
+
+```
+
+```{r}
 cytoscapePing()
 upgrade_graph(coregraph[[1]])
 createNetworkFromIgraph(coregraph[[1]],new.title='Chanaral')
