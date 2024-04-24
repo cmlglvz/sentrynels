@@ -1,0 +1,50 @@
+---
+title: "Higher Network Prep"
+author: "CGA"
+output: html_document
+---
+
+## Libraries
+
+```{r,echo=FALSE,include=FALSE}
+library(tidyverse)
+library(vegan)
+```
+
+## Data import
+
+```{r data}
+taxa <- read.csv("/Documents/Proyectos_R/sentrynels/Data/Network/Higher/taxa_higher.csv", header = TRUE, skip = 0, sep = ";", row.names = 1)
+chanaral <- read.csv("/Documents/Proyectos_R/sentrynels/Data/Network/t1.csv", header = TRUE, skip = 0, sep = ";", row.names = 1)
+flamenco <- read.csv("/Documents/Proyectos_R/sentrynels/Data/Network/t2.csv", header = TRUE, skip = 0, sep = ";", fill = TRUE, row.names = 1)
+huasco <- read.csv("/Documents/Proyectos_R/sentrynels/Data/Network/t3.csv", header = TRUE, skip = 0, sep = ";", fill = TRUE, row.names = 1)
+pta.choros <- read.csv("/Documents/Proyectos_R/sentrynels/Data/Network/t4.csv", header = TRUE, skip = 0, sep = ";", fill = TRUE, row.names = 1)
+quintero <- read.csv("/Documents/Proyectos_R/sentrynels/Data/Network/t5.csv", header = TRUE, skip = 0, sep = ";", fill = TRUE, row.names = 1)
+las.cruces <- read.csv("/Documents/Proyectos_R/sentrynels/Data/Network/t6.csv", header = TRUE, skip = 0, sep = ";", fill = TRUE, row.names = 1)
+```
+
+## Taxonomy function
+
+```{r}
+Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
+  z <- NULL
+  y <- NULL
+  for (i in 1:length(unique(Tax.Table[colnames(OTU.Table),Tax.lvl]))) {
+    if (length(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])!=length(rownames(OTU.Table))) {
+      z <- which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])
+      y <- cbind(y, apply(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])], 1, function(x) sum(x)))
+    } else {
+      y <- cbind(y, OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])
+    }
+  }
+  colnames(y) <- unique(Tax.Table[colnames(OTU.Table),Tax.lvl])
+  invisible((y))
+}
+```
+
+## Genuses
+
+```{r}
+gen.cha <- Tax.sum(OTU.Table = chanaral, Tax.Table = taxa, Tax.lvl = 10)
+```
+
